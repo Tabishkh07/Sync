@@ -45,15 +45,42 @@ app.get("/api/users/:id", async(req, res)=>{
     const id = req.params.id;
     try{
         const user = await User.findById(id);
-
         if(user == null){
-            return res.status(404).json({error: "Invaid User"});
+            return res.status(404).json({error: "Invalid User"});
         }
         res.status(200).json(user);
     }catch(err){
         res.status(400).json({error: "Invalid User Id"});
     }
-    
+});
+
+// post request - updation
+app.put("/api/users/:id", async(req, res)=>{
+    const id = req.params.id;
+    const data = req.body;
+    try{
+        const user = await User.findByIdAndUpdate(id, data, {new: true});
+        if(user == null){
+            return res.status(404).json({error: "Invalid User"});
+        }
+        return res.status(200).json(user);
+    }catch(err){
+        res.status(400).json({error: "Invalid User Id"});
+    };
+});
+
+// delete request
+app.delete("/api/users/:id", async(req, res)=>{
+    const id = req.params.id;
+    try{
+        const user = await User.findByIdAndDelete(id);
+        if(user == null){
+            return res.status(404).json({error: "Invalid User"});
+        }
+        return res.status(200).json(user);
+    }catch(err){
+        res.status(400).json({error: "Invalid User Id"});
+    };
 });
 
 const port = 3000;
