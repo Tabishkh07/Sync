@@ -1,12 +1,15 @@
 const express = require("express");
 const connectDB = require("./config/db");
+const auth = require("./routes/auth");
 const User = require('./models/User');
+
 require("dotenv").config();
 
 const app = express();
 
 connectDB();
 app.use(express.json());
+app.use("/api/auth", auth);
 
 // index route
 app.get("/", (req, res) => {
@@ -33,7 +36,7 @@ app.post("/api/users", async(req, res)=>{
 // for all users
 app.get("/api/users", async(req, res)=>{
     try{
-        const user = await User.find();
+        const user = await User.find().select("-password");
         res.status(200).json(user);
     }catch(err){
         res.status(500).json({error: err.message});
@@ -44,7 +47,7 @@ app.get("/api/users", async(req, res)=>{
 app.get("/api/users/:id", async(req, res)=>{
     const id = req.params.id;
     try{
-        const user = await User.findById(id);
+        const user = await User.findById(id).select("-password");
         if(user == null){
             return res.status(404).json({error: "Invalid User"});
         }
@@ -57,7 +60,10 @@ app.get("/api/users/:id", async(req, res)=>{
 // post request - updation
 app.put("/api/users/:id", async(req, res)=>{
     const id = req.params.id;
-    const data = req.body;
+    const data = {
+        name: req.body.name,
+        email: req.body.email
+    };
     try{
         const user = await User.findByIdAndUpdate(id, data, {new: true});
         if(user == null){
