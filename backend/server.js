@@ -2,6 +2,7 @@ const express = require("express");
 const connectDB = require("./config/db");
 const auth = require("./routes/auth");
 const User = require('./models/User');
+const authMiddleware = require("./middleware/auth");
 
 require("dotenv").config();
 
@@ -10,6 +11,14 @@ const app = express();
 connectDB();
 app.use(express.json());
 app.use("/api/auth", auth);
+
+// protected route
+app.get("/api/protected", authMiddleware, (req, res) => {
+    res.status(200).json({
+        message: "You are authenticated",
+        user: req.user
+    });
+});
 
 // index route
 app.get("/", (req, res) => {
@@ -58,8 +67,13 @@ app.get("/api/users/:id", async(req, res)=>{
 });
 
 // post request - updation
-app.put("/api/users/:id", async(req, res)=>{
+app.put("/api/users/:id", authMiddleware, async(req, res)=>{
     const id = req.params.id;
+    if(req.user.userId !== id) {
+        return res.status(403).json({
+            error: "Not authorized"
+        });
+    }
     const data = {
         name: req.body.name,
         email: req.body.email
@@ -76,8 +90,15 @@ app.put("/api/users/:id", async(req, res)=>{
 });
 
 // delete request
-app.delete("/api/users/:id", async(req, res)=>{
+app.delete("/api/users/:id", authMiddleware, async(req, res)=>{
     const id = req.params.id;
+
+    if (req.user.userId !== id) {
+        return res.status(403).json({
+            error: "Not authorized"
+        });
+    }
+    
     try{
         const user = await User.findByIdAndDelete(id);
         if(user == null){
