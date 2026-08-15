@@ -1,10 +1,11 @@
+require("dotenv").config();
 const express = require("express");
 const connectDB = require("./config/db");
 const auth = require("./routes/auth");
 const User = require('./models/User');
 const authMiddleware = require("./middleware/auth");
 
-require("dotenv").config();
+
 
 const app = express();
 
@@ -25,23 +26,6 @@ app.get("/", (req, res) => {
     res.send("SYNC API is running");
 });
 
-// post request
-app.post("/api/users", async(req, res)=>{
-    try {
-        const user = new User(req.body);
-        await user.save();
-
-        res.status(201).json(user);
-    } catch (err) {
-        if (err.name === "ValidationError") {
-            return res.status(400).json({
-                error: "Invalid user data"
-            });
-        }
-        res.status(500).json({error: err.message});
-    }
-}); 
-
 // for all users
 app.get("/api/users", async(req, res)=>{
     try{
@@ -58,7 +42,7 @@ app.get("/api/users/:id", async(req, res)=>{
     try{
         const user = await User.findById(id).select("-password");
         if(user == null){
-            return res.status(404).json({error: "Invalid User"});
+            return res.status(404).json({error: "User not found"});
         }
         res.status(200).json(user);
     }catch(err){
@@ -81,7 +65,7 @@ app.put("/api/users/:id", authMiddleware, async(req, res)=>{
     try{
         const user = await User.findByIdAndUpdate(id, data, {new: true});
         if(user == null){
-            return res.status(404).json({error: "Invalid User"});
+            return res.status(404).json({error: "User not found"});
         }
         return res.status(200).json(user);
     }catch(err){
@@ -102,7 +86,7 @@ app.delete("/api/users/:id", authMiddleware, async(req, res)=>{
     try{
         const user = await User.findByIdAndDelete(id);
         if(user == null){
-            return res.status(404).json({error: "Invalid User"});
+            return res.status(404).json({error: "User not found"});
         }
         return res.status(200).json(user);
     }catch(err){
