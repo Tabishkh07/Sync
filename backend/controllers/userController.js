@@ -1,0 +1,82 @@
+const User = require("../models/User");
+
+const getUsers = async(req, res, next)=>{
+    try{
+        const user = await User.find().select("-password");
+        res.status(200).json(user);
+    }catch(err){
+        next(err);
+    }
+}
+
+const getUserById = async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const user = await User.findById(id).select("-password");
+        if (user == null) {
+            return res.status(404).json({
+                error: "User not found"
+            });
+        }
+        res.status(200).json(user);
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+const updateUser = async (req, res, next) => {
+    const id = req.params.id;
+
+    if (req.user.userId !== id) {
+        return res.status(403).json({
+            error: "Not authorized"
+        });
+    }
+
+    const data = {
+        name: req.body.name,
+        email: req.body.email
+    };
+
+    try {
+        const user = await User.findByIdAndUpdate(
+            id,
+            data,
+            { new: true }
+        ).select("-password");
+
+        if (user == null) {
+            return res.status(404).json({
+                error: "User not found"
+            });
+        }
+
+        return res.status(200).json(user);
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+const deleteUser = async(req, res, next)=> {
+    const id = req.params.id;
+
+    if (req.user.userId !== id) {
+        return res.status(403).json({
+            error: "Not authorized"
+        });
+    }
+    
+    try{
+        const user = await User.findByIdAndDelete(id);
+        if(user == null){
+            return res.status(404).json({error: "User not found"});
+        }
+        return res.status(200).json({message: "User Deleted Successfully"});
+    }catch(err){
+        next(err);
+    };
+};
+
+module.exports = {getUsers, getUserById, updateUser, deleteUser};
