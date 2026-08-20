@@ -7,6 +7,13 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
+    if (err.type === "entity.too.large") {
+        return res.status(413).json({
+            error: "Request body too large"
+        });
+    }
+
+
     res.status(500).json({
         error: "Internal server error"
     });

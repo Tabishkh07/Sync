@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const helmet = require("helmet");
 const connectDB = require("./config/db");
 const auth = require("./routes/auth");
 const authMiddleware = require("./middleware/auth");
@@ -9,9 +10,11 @@ const userRoutes = require("./routes/users");
 const app = express();
 
 connectDB();
-app.use(express.json());
+app.use(helmet());
+app.use(express.json({ limit: "10kb" }));
 app.use("/api/auth", auth);
 app.use("/api/users", userRoutes);
+
 
 // protected route
 app.get("/api/protected", authMiddleware, (req, res) => {
