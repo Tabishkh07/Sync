@@ -2,8 +2,26 @@ const User = require("../models/User");
 
 const getUsers = async(req, res, next)=>{
     try{
-        const user = await User.find().select("-password");
-        res.status(200).json(user);
+        let page = Number(req.query.page);
+        let limit = Number(req.query.limit);
+        //  ristricting the invalid entries.
+        if (!Number.isInteger(page) || page < 1) {
+            page = 1;
+        }
+        if (!Number.isInteger(limit) || limit < 1) {
+            limit = 10;
+        }
+        if (limit > 100) {
+            limit = 100;
+        }
+
+        const skip = (page - 1) * limit;
+        const totalUsers = await User.countDocuments();
+        const totalPages = Math.ceil(totalUsers/limit);
+
+        const user = await User.find().select("-password").skip(skip).limit(limit);
+        res.status(200).json({"users": user, "pagination": {page, limit, totalUsers, totalPages}
+    });
     }catch(err){
         next(err);
     }
