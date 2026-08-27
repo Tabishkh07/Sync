@@ -1,9 +1,21 @@
 const User = require("../models/User");
 
+const escapeRegex = (text) => {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 const getUsers = async(req, res, next)=>{
     try{
         let page = Number(req.query.page);
         let limit = Number(req.query.limit);
+        const name = req.query.name;
+        const filter = {};
+        
+        // filtering
+        if (name) {
+            filter.name = {$regex: escapeRegex(name), $options: "i" };
+        }
+
         //  ristricting the invalid entries.
         if (!Number.isInteger(page) || page < 1) {
             page = 1;
@@ -16,10 +28,10 @@ const getUsers = async(req, res, next)=>{
         }
 
         const skip = (page - 1) * limit;
-        const totalUsers = await User.countDocuments();
+        const totalUsers = await User.countDocuments(filter);
         const totalPages = Math.ceil(totalUsers/limit);
 
-        const user = await User.find().select("-password").skip(skip).limit(limit);
+        const user = await User.find(filter).select("-password").skip(skip).limit(limit);
         res.status(200).json({"users": user, "pagination": {page, limit, totalUsers, totalPages}
     });
     }catch(err){
