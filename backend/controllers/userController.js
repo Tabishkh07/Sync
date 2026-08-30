@@ -21,18 +21,25 @@ const getUsers = async (req, res, next) => {
         if (limit > 100) {
             limit = 100;
         }
-
         const skip = (page - 1) * limit;
         // -------------------------
         // FILTERING
         // -------------------------
         const name = req.query.name;
+        const search = req.query.search;
         const filter = {};
         if (name) {
             filter.name = {
                 $regex: escapeRegex(name),
                 $options: "i"
             };
+        }
+        if (search) {
+            const safeSearch = escapeRegex(search);
+            filter.$or = [
+                { name: { $regex: safeSearch, $options: "i" } },
+                { email: { $regex: safeSearch, $options: "i" } }
+            ];
         }
         // -------------------------
         // SORTING
@@ -81,13 +88,16 @@ const getUsers = async (req, res, next) => {
 };
 const getUserById = async (req, res, next) => {
     const id = req.params.id;
+
     try {
         const user = await User.findById(id).select("-password");
+
         if (user == null) {
             return res.status(404).json({
                 error: "User not found"
             });
         }
+
         res.status(200).json(user);
 
     } catch (err) {
@@ -129,7 +139,6 @@ const updateUser = async (req, res, next) => {
     }
 };
 
-
 const deleteUser = async (req, res, next) => {
     const id = req.params.id;
 
@@ -156,7 +165,6 @@ const deleteUser = async (req, res, next) => {
         next(err);
     }
 };
-
 
 module.exports = {
     getUsers,
