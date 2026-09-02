@@ -123,7 +123,7 @@ const updateUser = async (req, res, next) => {
         const user = await User.findByIdAndUpdate(
             id,
             data,
-            { new: true }
+            { new: true , runValidators:true} // to tell monngoose to validate it also
         ).select("-password");
 
         if (user == null) {

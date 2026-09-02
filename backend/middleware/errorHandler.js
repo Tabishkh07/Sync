@@ -7,6 +7,12 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
+    if (err.name === "ValidationError") {
+        return res.status(400).json({
+            error: "Invalid input"
+        });
+    }
+
     if (err.type === "entity.too.large") {
         return res.status(413).json({
             error: "Request body too large"
